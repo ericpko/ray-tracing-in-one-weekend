@@ -1,3 +1,7 @@
+#![allow(unused)] // ! mute unused warnings for now
+mod ray;
+use ray::Ray;
+
 // Image dimensions in pixels
 const IMAGE_WIDTH: usize = 256;
 const IMAGE_HEIGHT: usize = 256;
