@@ -1,44 +1,23 @@
-#![allow(unused)] // ! mute unused warnings for now
+// #![allow(unused)] // ! mute unused warnings for now
 use glam::Vec3;
 
 mod ray;
 use ray::Ray;
-mod camera;
+pub mod camera;
 use camera::Camera;
+pub mod image;
+use image::Image;
 
-// Image dimensions in pixels
-const ASPECT_RATIO: f32 = 16.0 / 9.0;
-const IMAGE_WIDTH: usize = 400;
-const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as usize; // 225
-
-// Camera constants
-const VIEWPORT_HEIGHT: f32 = 2.0;
-const VIEWPORT_WIDTH: f32 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-const FOCAL_LENGTH: f32 = 1.0;
-
-pub fn render() -> anyhow::Result<()> {
+pub fn render(mut image: Image, camera: Camera) -> anyhow::Result<()> {
     pretty_env_logger::init();
     log::info!("rendering image...");
 
-    // create a camera
-    let camera = Camera::new(
-        ASPECT_RATIO,
-        VIEWPORT_HEIGHT,
-        FOCAL_LENGTH,
-        Vec3::new(0., 0., 0.),
-        Vec3::new(0., 0., -1.),
-    );
-
-    let mut image: Vec<u8> = Vec::with_capacity(3 * IMAGE_WIDTH * IMAGE_HEIGHT);
-
-    for j in (0..IMAGE_HEIGHT).rev() {
-        for i in 0..IMAGE_WIDTH {
-            let u = i as f32 / (IMAGE_WIDTH as f32 - 1.);
-            let v = j as f32 / (IMAGE_HEIGHT as f32 - 1.);
-            let ray = camera.shoot_ray(u, v);
+    for j in (0..image.height).rev() {
+        for i in 0..image.width {
+            let ray = camera.shoot_ray(i as f32, j as f32, image.width as f32, image.height as f32);
             let pixel_color = ray_color(ray);
 
-            image.extend(pixel_color);
+            image.pixels.extend(pixel_color);
         }
     }
     write_ppm(image)?;
@@ -46,7 +25,19 @@ pub fn render() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn hit_sphere(center: Vec3, radius: f32, ray: &Ray) -> bool {
+    let oc = ray.origin - center;
+    let a = ray.dir.dot(ray.dir);
+    let b = 2.0 * oc.dot(ray.dir);
+    let c = oc.dot(oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
+}
+
 fn ray_color(ray: Ray) -> Vec<u8> {
+    if hit_sphere(Vec3::new(0., 0., -1.), 0.5, &ray) {
+        return vec![255_u8, 0_u8, 0_u8];
+    }
     let unit_dir = ray.dir.normalize();
     let t = 0.5 * (unit_dir.y + 1.0);
     let color = (1. - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0);
@@ -58,12 +49,12 @@ fn ray_color(ray: Ray) -> Vec<u8> {
     color
 }
 
-fn write_ppm(image: Vec<u8>) -> std::io::Result<()> {
-    let mut image_vec = format!("P6\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")
-        .as_bytes()
-        .to_owned(); // &[u8] -> Vec<u8>
+fn write_ppm(image: Image) -> std::io::Result<()> {
+    let width = image.width;
+    let height = image.height;
+    let mut image_vec = format!("P6\n{width} {height}\n255\n").as_bytes().to_owned(); // &[u8] -> Vec<u8>
 
-    image_vec.extend(image);
+    image_vec.extend(image.pixels);
     std::fs::write("image.ppm", image_vec)?;
     Ok(())
 }
