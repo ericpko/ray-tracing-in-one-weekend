@@ -7,6 +7,7 @@ pub mod camera;
 use camera::Camera;
 pub mod image;
 use image::Image;
+mod geometry;
 
 pub fn render(mut image: Image, camera: Camera) -> anyhow::Result<()> {
     pretty_env_logger::init();
