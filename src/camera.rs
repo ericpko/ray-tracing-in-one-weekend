@@ -8,7 +8,6 @@ pub struct Camera {
     pub viewport_width: f32,
     pub viewport_height: f32,
     pub focal_length: f32,
-    pub lower_left_corner: Vec3,
 
     // Camera/Eye coordinate system
     pub origin: Vec3, // eye
@@ -33,18 +32,11 @@ impl Camera {
         let right = up.cross(cam_dir).normalize();
         let up = cam_dir.cross(right);
 
-        // calculate the lower left corner of the viewport
-        let lower_left_corner = origin
-            - right * viewport_width / 2.
-            - up * viewport_height / 2.
-            - Vec3::new(0., 0., focal_length);
-
         Self {
             aspect_ratio,
             viewport_width,
             viewport_height,
             focal_length,
-            lower_left_corner,
             origin,
             u: right,
             v: up,
@@ -60,7 +52,8 @@ impl Camera {
         let v = b + self.viewport_height * j / (image_height - 1.);
         let w = -self.focal_length;
 
-        let ray_dir = w * self.w + u * self.u + v * self.v;
+        let point_on_image_plane = w * self.w + u * self.u + v * self.v;
+        let ray_dir = point_on_image_plane - self.origin;
         Ray::new(self.origin, ray_dir)
     }
 }

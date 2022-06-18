@@ -1,4 +1,4 @@
-// #![allow(unused)] // ! mute unused warnings for now
+#![allow(unused)] // ! mute unused warnings for now
 use glam::Vec3;
 
 mod ray;
