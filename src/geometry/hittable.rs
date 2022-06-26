@@ -2,6 +2,10 @@ use glam::Vec3;
 
 use crate::ray::Ray;
 
+pub trait Hittable {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+}
+
 pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
@@ -9,16 +13,18 @@ pub struct HitRecord {
     pub front_face: bool,
 }
 
-impl HitRecord {
-    pub fn new() -> Self {
+impl Default for HitRecord {
+    fn default() -> Self {
         Self {
-            point: Vec3::new(0., 0., 0.),
-            normal: Vec3::new(0., 0., 0.),
-            t: 0.0,
-            front_face: false,
+            point: Vec3::default(),
+            normal: Vec3::default(),
+            t: Default::default(),
+            front_face: Default::default(),
         }
     }
+}
 
+impl HitRecord {
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
         self.front_face = ray.dir.dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
@@ -34,10 +40,6 @@ impl HitRecord {
         self.t = other.t;
         self.front_face = other.front_face;
     }
-}
-
-pub trait Hittable {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
 }
 
 // Hitable list type
@@ -63,7 +65,7 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
-        let mut tmp_rec = HitRecord::new();
+        let mut tmp_rec = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
