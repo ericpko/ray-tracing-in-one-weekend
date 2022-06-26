@@ -16,7 +16,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32, mut rec: HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let oc = ray.origin - self.center;
         let a = ray.dir.length_squared();
         let half_b = oc.dot(ray.dir);

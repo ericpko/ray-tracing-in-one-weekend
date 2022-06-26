@@ -9,7 +9,6 @@ pub struct HitRecord {
     pub front_face: bool,
 }
 
-// NOTE not sure about instantiating HitRecord or having set_face_normal function
 impl HitRecord {
     pub fn new() -> Self {
         Self {
@@ -20,7 +19,6 @@ impl HitRecord {
         }
     }
 
-    // NOTE change ray: &Ray signature? Need to be borrowed?
     pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
         self.front_face = ray.dir.dot(outward_normal) < 0.0;
         self.normal = if self.front_face {
@@ -29,9 +27,54 @@ impl HitRecord {
             -outward_normal
         }
     }
+
+    pub fn copy_values(&mut self, other: &HitRecord) {
+        self.point = other.point;
+        self.normal = other.normal;
+        self.t = other.t;
+        self.front_face = other.front_face;
+    }
 }
 
-// FIXME might have to change rec: &mut HitRecord
 pub trait Hittable {
-    fn hit(&self, ray: Ray, t_min: f32, t_max: f32, rec: HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool;
+}
+
+// Hitable list type
+pub struct HittableList {
+    objects: Vec<Box<dyn Hittable>>,
+}
+
+impl HittableList {
+    pub fn new() -> Self {
+        Self {
+            objects: Vec::new(),
+        }
+    }
+
+    pub fn add(&mut self, obj: Box<dyn Hittable>) {
+        self.objects.push(obj);
+    }
+
+    pub fn clear(&mut self) {
+        self.objects.clear();
+    }
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+        let mut tmp_rec = HitRecord::new();
+        let mut hit_anything = false;
+        let mut closest_so_far = t_max;
+
+        for obj in &self.objects {
+            if obj.hit(ray, t_min, closest_so_far, &mut tmp_rec) {
+                hit_anything = true;
+                closest_so_far = tmp_rec.t;
+                rec.copy_values(&tmp_rec);
+            }
+        }
+
+        return hit_anything;
+    }
 }
