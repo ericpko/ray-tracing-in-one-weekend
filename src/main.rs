@@ -7,7 +7,7 @@ use ray_tracing_iow::{
 
 pub fn main() -> anyhow::Result<()> {
     // set up the image dimensions in pixels
-    let image = Image::new(16.0 / 9.0, 400);
+    let image = Image::new(16.0 / 9.0, 400, 100);
     // set up a camera
     let camera = Camera::new(
         image.aspect_ratio,
