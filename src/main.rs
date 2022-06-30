@@ -1,5 +1,5 @@
 use glam::Vec3;
-use ray_tracing_iow::{
+use ray_tracing_in_one_weekend::{
     camera::Camera,
     geometry::{hittable::HittableList, sphere::Sphere},
     image::Image,
@@ -21,6 +21,6 @@ pub fn main() -> anyhow::Result<()> {
     world.add(Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5)));
     world.add(Box::new(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)));
 
-    ray_tracing_iow::render(image, camera, world)?;
+    ray_tracing_in_one_weekend::render(image, camera, world)?;
     Ok(())
 }

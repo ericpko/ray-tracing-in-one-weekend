@@ -1,5 +1,5 @@
 [package]
-name = "ray-tracing-iow"
+name = "ray-tracing-in-one-weekend"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,5 @@ edition = "2021"
 anyhow = "1"
 log = "0.4"
 pretty_env_logger = "0.4"
-glam = "0.20"
+glam = "0.21"
 rand = "0.8"
