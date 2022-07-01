@@ -47,7 +47,7 @@ fn ray_color(ray: Ray, world: &HittableList, depth: i32) -> Vec3 {
     // if we've exceeded the ray bounce limit, no more light is gathered
     if depth <= 0 { // color is already set to 0, 0, 0
     } else if world.hit(&ray, 0.001, std::f32::INFINITY, &mut rec) {
-        let target_point = rec.point + rec.normal + random_unit_vector();
+        let target_point = rec.point + random_in_hemisphere(rec.normal);
         let reflection_ray = Ray::new(rec.point, target_point - rec.point);
         color = 0.5 * ray_color(reflection_ray, &world, depth - 1);
     } else {
@@ -84,6 +84,16 @@ fn clamp(x: f32, min: f32, max: f32) -> f32 {
         return max;
     }
     return x;
+}
+
+fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if in_unit_sphere.dot(normal) > 0.0 {
+        // in the same hemisphere as the normal
+        return in_unit_sphere;
+    } else {
+        return -in_unit_sphere;
+    }
 }
 
 fn random_unit_vector() -> Vec3 {
