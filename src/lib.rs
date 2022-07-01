@@ -28,6 +28,7 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
                     image.width as f32,
                     image.height as f32,
                 );
+                // TODO move fn to ray.color_pixel(...)
                 pixel_color += ray_color(ray, &world, image.max_depth);
             }
 
@@ -35,7 +36,7 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
             image.pixels.extend(pixel_color);
         }
     }
-    write_ppm(image)?;
+    image.write_ppm()?;
 
     Ok(())
 }
@@ -109,14 +110,4 @@ fn random_in_unit_sphere() -> Vec3 {
             return p;
         }
     }
-}
-
-fn write_ppm(image: Image) -> std::io::Result<()> {
-    let width = image.width;
-    let height = image.height;
-    let mut image_vec = format!("P6\n{width} {height}\n255\n").as_bytes().to_owned();
-
-    image_vec.extend(image.pixels);
-    std::fs::write("image.ppm", image_vec)?;
-    Ok(())
 }

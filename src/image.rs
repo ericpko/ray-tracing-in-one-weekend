@@ -23,4 +23,14 @@ impl Image {
             pixels,
         }
     }
+
+    pub fn write_ppm(&self) -> std::io::Result<()> {
+        let width = self.width;
+        let height = self.height;
+        let mut image_vec = format!("P6\n{width} {height}\n255\n").as_bytes().to_owned();
+
+        image_vec.extend(&self.pixels);
+        std::fs::write("image.ppm", image_vec)?;
+        Ok(())
+    }
 }
