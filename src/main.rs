@@ -7,7 +7,7 @@ use ray_tracing_in_one_weekend::{
 
 pub fn main() -> anyhow::Result<()> {
     // set up the image dimensions in pixels
-    let image = Image::new(16.0 / 9.0, 400, 100);
+    let image = Image::new(16.0 / 9.0, 400, 100, 50);
     // set up a camera
     let camera = Camera::new(
         image.aspect_ratio,
