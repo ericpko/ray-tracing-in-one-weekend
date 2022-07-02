@@ -25,8 +25,8 @@ pub fn main() -> anyhow::Result<()> {
     // create some materials
     let mat_ground = Rc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.0)));
     let mat_center = Rc::new(Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
-    let mat_left = Rc::new(Metal::new(Vec3::new(0.8, 0.8, 0.8)));
-    let mat_right = Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2)));
+    let mat_left = Rc::new(Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.3));
+    let mat_right = Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0));
 
     // set up objects in the world
     let mut world = HittableList::new();
