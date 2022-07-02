@@ -43,13 +43,12 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
 
 fn ray_color(ray: Ray, world: &HittableList, depth: i32) -> Vec3 {
     let mut color = Vec3::new(0., 0., 0.);
-    let mut rec = HitRecord::default();
 
     // if we've exceeded the ray bounce limit, no more light is gathered
     if depth <= 0 { // color is already set to 0, 0, 0
-    } else if world.hit(&ray, 0.001, std::f32::INFINITY, &mut rec) {
-        let target_point = rec.point + random_in_hemisphere(rec.normal);
-        let reflection_ray = Ray::new(rec.point, target_point - rec.point);
+    } else if let Some(hit_rec) = world.hit(&ray, 0.001, std::f32::INFINITY) {
+        let target_point = hit_rec.point + random_in_hemisphere(hit_rec.normal);
+        let reflection_ray = Ray::new(hit_rec.point, target_point - hit_rec.point);
         color = 0.5 * ray_color(reflection_ray, &world, depth - 1);
     } else {
         let unit_dir = ray.dir.normalize();
