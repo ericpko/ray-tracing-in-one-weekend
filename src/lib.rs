@@ -47,9 +47,9 @@ fn ray_color(ray: Ray, world: &HittableList, depth: i32) -> Vec3 {
     // if we've exceeded the ray bounce limit, no more light is gathered
     if depth <= 0 { // color is already set to 0, 0, 0
     } else if let Some(hit_rec) = world.hit(&ray, 0.001, std::f32::INFINITY) {
-        let target_point = hit_rec.point + random_in_hemisphere(hit_rec.normal);
-        let reflection_ray = Ray::new(hit_rec.point, target_point - hit_rec.point);
-        color = 0.5 * ray_color(reflection_ray, &world, depth - 1);
+        if let Some((scattered, attenuation)) = hit_rec.material.scatter(&ray, &hit_rec) {
+            color = attenuation * ray_color(scattered, world, depth - 1);
+        }
     } else {
         let unit_dir = ray.dir.normalize();
         let t = 0.5 * (unit_dir.y + 1.0);
@@ -109,4 +109,13 @@ fn random_in_unit_sphere() -> Vec3 {
             return p;
         }
     }
+}
+
+fn near_zero(v: &Vec3) -> bool {
+    let s: f32 = 1e-8;
+    return v.x.abs() < s && v.y.abs() < s && v.z.abs() < s;
+}
+
+fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2.0 * v.dot(n) * n
 }

@@ -4,50 +4,48 @@ use glam::Vec3;
 
 use crate::ray::Ray;
 
-use super::material::Material;
+use super::material::{self, Material};
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 }
 
-#[derive(Default)]
 pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
     pub t: f32,
     pub front_face: bool,
+    pub material: Rc<dyn Material>,
 }
 
-// impl Default for HitRecord {
-//     fn default() -> Self {
-//         Self {
-//             point: Vec3::default(),
-//             normal: Vec3::default(),
-//             t: Default::default(),
-//             front_face: Default::default(),
-//         }
-//     }
-// }
-
 impl HitRecord {
-    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
-        self.front_face = ray.dir.dot(outward_normal) < 0.0;
-        self.normal = if self.front_face {
-            outward_normal
-        } else {
-            -outward_normal
+    pub fn new(
+        point: Vec3,
+        normal: Vec3,
+        t: f32,
+        front_face: bool,
+        material: &Rc<dyn Material>,
+    ) -> Self {
+        Self {
+            point,
+            normal,
+            t,
+            front_face,
+            material: Rc::clone(material),
         }
     }
 
-    pub fn copy_values(&mut self, other: &HitRecord) {
-        self.point = other.point;
-        self.normal = other.normal;
-        self.t = other.t;
-        self.front_face = other.front_face;
-    }
+    // pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
+    //     self.front_face = ray.dir.dot(outward_normal) < 0.0;
+    //     self.normal = if self.front_face {
+    //         outward_normal
+    //     } else {
+    //         -outward_normal
+    //     }
+    // }
 }
 
-// Hitable list type
+// Hittable list type
 pub struct HittableList {
     objects: Vec<Box<dyn Hittable>>,
 }
