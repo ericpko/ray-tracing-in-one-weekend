@@ -22,12 +22,9 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
         for i in 0..image.width {
             let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
             for _ in 0..image.samples_per_pixel {
-                let ray = camera.shoot_ray(
-                    i as f32 + rand::random::<f32>(),
-                    j as f32 + rand::random::<f32>(),
-                    image.width as f32,
-                    image.height as f32,
-                );
+                let u = (i as f32 + rand::random::<f32>()) / (image.width as f32 - 1.0);
+                let v = (j as f32 + rand::random::<f32>()) / (image.height as f32 - 1.0);
+                let ray = camera.shoot_ray(u, v);
                 // TODO move fn to ray.color_pixel(...)
                 pixel_color += ray_color(ray, &world, image.max_depth);
             }
