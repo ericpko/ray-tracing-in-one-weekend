@@ -15,11 +15,17 @@ pub fn main() -> anyhow::Result<()> {
     // set up the image dimensions in pixels
     let image = Image::new(16.0 / 9.0, 400, 100, 50);
     // set up a camera
+    let look_from = Vec3::new(3., 3., 2.);
+    let look_at = Vec3::new(0., 0., -1.);
+    let dist_to_focus = (look_from - look_at).length();
+    let aperture = 2.0;
     let camera = Camera::new(
-        Vec3::new(-2., 2., 1.),
-        Vec3::new(0., 0., -1.),
-        20.,
+        look_from,
+        look_at,
+        20.0,
         image.aspect_ratio,
+        aperture,
+        dist_to_focus,
     );
 
     // create some materials (Rc = reference counting pointer = shared pointers)

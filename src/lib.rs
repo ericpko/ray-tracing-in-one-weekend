@@ -108,6 +108,17 @@ fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
+fn random_in_unit_disc() -> Vec3 {
+    let mut rng = rand::thread_rng();
+    let distr = rand::distributions::Uniform::new(-1.0f32, 1.0);
+    loop {
+        let p = Vec3::new(rng.sample(distr), rng.sample(distr), 0.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
 fn near_zero(v: &Vec3) -> bool {
     let s: f32 = 1e-8;
     return v.x.abs() < s && v.y.abs() < s && v.z.abs() < s;
