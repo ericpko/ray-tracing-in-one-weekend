@@ -3,38 +3,32 @@ use glam::Vec3;
 use crate::ray::Ray;
 
 pub struct Camera {
-    // Camera constants
-    pub vfov: f32, // vertical field-of-view in degrees
-    pub aspect_ratio: f32,
-    pub viewport_width: f32,
-    pub viewport_height: f32,
-    pub focal_length: f32,
-
-    // Camera/Eye coordinate system
-    pub origin: Vec3,
+    // Camera/Eye coordinate system (non-normalized)
+    pub origin: Vec3, // look from
     pub horizontal: Vec3,
     pub vertical: Vec3,
     pub lower_left_corner: Vec3,
 }
 
 impl Camera {
-    pub fn new(vfov: f32, aspect_ratio: f32, focal_length: f32, origin: Vec3) -> Self {
+    pub fn new(look_from: Vec3, look_at: Vec3, vfov: f32, aspect_ratio: f32) -> Self {
         let theta = f32::to_radians(vfov);
         let h = f32::tan(theta / 2.0);
         let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, viewport_height, 0.0);
-        let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0., 0., focal_length);
+        // create an orthonormal basis u, v, w, for our camera frame
+        let vup = Vec3::new(0., 1., 0.);
+        let w = -(look_at - look_from).normalize();
+        let u = vup.cross(w).normalize();
+        let v = w.cross(u);
+
+        let origin = look_from;
+        let horizontal = viewport_width * u;
+        let vertical = viewport_height * v;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
 
         Self {
-            vfov,
-            aspect_ratio,
-            viewport_width,
-            viewport_height,
-            focal_length,
             origin,
             horizontal,
             vertical,
