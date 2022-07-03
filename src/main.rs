@@ -5,7 +5,7 @@ use ray_tracing_in_one_weekend::{
     camera::Camera,
     geometry::{
         hittable::HittableList,
-        material::{Lambertian, Metal},
+        material::{Dielectric, Lambertian, Metal},
         sphere::Sphere,
     },
     image::Image,
@@ -24,8 +24,10 @@ pub fn main() -> anyhow::Result<()> {
     );
     // create some materials
     let mat_ground = Rc::new(Lambertian::new(Vec3::new(0.8, 0.8, 0.0)));
-    let mat_center = Rc::new(Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
-    let mat_left = Rc::new(Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.3));
+    // let mat_center = Rc::new(Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
+    let mat_center = Rc::new(Dielectric::new(1.5));
+    // let mat_left = Rc::new(Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.3));
+    let mat_left = Rc::new(Dielectric::new(1.5));
     let mat_right = Rc::new(Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0));
 
     // set up objects in the world

@@ -1,6 +1,6 @@
 use glam::Vec3;
 
-use crate::{near_zero, random_in_unit_sphere, random_unit_vector, ray::Ray, reflect};
+use crate::{near_zero, random_in_unit_sphere, random_unit_vector, ray::Ray, reflect, refract};
 
 use super::hittable::HitRecord;
 
@@ -51,7 +51,6 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vec3)> {
         let reflected = reflect(ray_in.dir.normalize(), rec.normal);
-        // let scattered = Ray::new(rec.point, reflected);
         let scattered = Ray::new(rec.point, reflected + self.fuzz * random_in_unit_sphere());
         let attenuation = self.albedo;
 
@@ -59,5 +58,33 @@ impl Material for Metal {
             return Some((scattered, attenuation));
         }
         None
+    }
+}
+
+// Material for clear surfaces - i.e. water, glass, etc.
+pub struct Dielectric {
+    pub refractive_index: f32, // index of refraction
+}
+
+impl Dielectric {
+    pub fn new(refractive_index: f32) -> Self {
+        Self { refractive_index }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vec3)> {
+        let attenuation = Vec3::new(1.0, 1.0, 1.0);
+        let refraction_ratio = if rec.front_face {
+            1.0 / self.refractive_index
+        } else {
+            self.refractive_index
+        };
+
+        let unit_dir = ray_in.dir.normalize();
+        let refracted = refract(unit_dir, rec.normal, refraction_ratio);
+
+        let scattered = Ray::new(rec.point, refracted);
+        Some((scattered, attenuation))
     }
 }

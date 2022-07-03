@@ -46,7 +46,7 @@ fn ray_color(ray: Ray, world: &HittableList, depth: i32) -> Vec3 {
 
     // if we've exceeded the ray bounce limit, no more light is gathered
     if depth <= 0 { // color is already set to 0, 0, 0
-    } else if let Some(hit_rec) = world.hit(&ray, 0.001, std::f32::INFINITY) {
+    } else if let Some(hit_rec) = world.hit(&ray, 0.001, f32::MAX) {
         if let Some((scattered, attenuation)) = hit_rec.material.scatter(&ray, &hit_rec) {
             color = attenuation * ray_color(scattered, world, depth - 1);
         }
@@ -118,4 +118,11 @@ fn near_zero(v: &Vec3) -> bool {
 
 fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * v.dot(n) * n
+}
+
+fn refract(uv: Vec3, n: Vec3, eta_over_etaprime: f32) -> Vec3 {
+    let cos_theta = f32::min(-uv.dot(n), 1.0);
+    let r_out_perp = eta_over_etaprime * (uv + cos_theta * n);
+    let r_out_parallel = -f32::sqrt(f32::abs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
 }
