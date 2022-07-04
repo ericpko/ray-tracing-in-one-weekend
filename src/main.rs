@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use glam::Vec3;
 use rand::Rng;
@@ -43,11 +43,11 @@ pub fn main() -> anyhow::Result<()> {
 fn generate_random_scene() -> HittableList {
     let mut world = HittableList::new();
 
-    let mat_ground: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
-    world.add(Box::new(Sphere::new(
+    let mat_ground: Arc<dyn Material> = Arc::new(Lambertian::new(Vec3::new(0.5, 0.5, 0.5)));
+    world.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Rc::clone(&mat_ground),
+        Arc::clone(&mat_ground),
     )));
 
     let mut rng = rand::thread_rng();
@@ -60,35 +60,35 @@ fn generate_random_scene() -> HittableList {
             let center = Vec3::new(a + 0.9 * rng.gen::<f32>(), 0.2, b + 0.9 * rng.gen::<f32>());
 
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let mat_sphere: Rc<dyn Material>;
+                let mat_sphere: Arc<dyn Material>;
                 if choose_mat < 0.8 {
                     // diffuse
                     let r = rng.gen::<f32>() * rng.gen::<f32>();
                     let g = rng.gen::<f32>() * rng.gen::<f32>();
                     let b = rng.gen::<f32>() * rng.gen::<f32>();
                     let albedo = Vec3::new(r, g, b);
-                    mat_sphere = Rc::new(Lambertian::new(albedo));
+                    mat_sphere = Arc::new(Lambertian::new(albedo));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::new(rng.sample(distr), rng.sample(distr), rng.sample(distr));
                     let fuzz: f32 = rng.gen_range(0.0..0.5);
-                    mat_sphere = Rc::new(Metal::new(albedo, fuzz));
+                    mat_sphere = Arc::new(Metal::new(albedo, fuzz));
                 } else {
                     // glass
-                    mat_sphere = Rc::new(Dielectric::new(1.5));
+                    mat_sphere = Arc::new(Dielectric::new(1.5));
                 }
-                world.add(Box::new(Sphere::new(center, 0.2, mat_sphere)));
+                world.add(Arc::new(Sphere::new(center, 0.2, mat_sphere)));
             }
         }
     }
 
-    let mat1: Rc<dyn Material> = Rc::new(Dielectric::new(1.5));
-    let mat2: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1)));
-    let mat3: Rc<dyn Material> = Rc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
+    let mat1: Arc<dyn Material> = Arc::new(Dielectric::new(1.5));
+    let mat2: Arc<dyn Material> = Arc::new(Lambertian::new(Vec3::new(0.4, 0.2, 0.1)));
+    let mat3: Arc<dyn Material> = Arc::new(Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0));
 
-    world.add(Box::new(Sphere::new(Vec3::new(0., 1., 0.), 1., mat1)));
-    world.add(Box::new(Sphere::new(Vec3::new(-4., 1., 0.), 1., mat2)));
-    world.add(Box::new(Sphere::new(Vec3::new(4., 1., 0.), 1., mat3)));
+    world.add(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1., mat1)));
+    world.add(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1., mat2)));
+    world.add(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1., mat3)));
 
     world
 }

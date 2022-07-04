@@ -4,7 +4,7 @@ use crate::{near_zero, random_in_unit_sphere, random_unit_vector, ray::Ray, refl
 
 use super::hittable::HitRecord;
 
-pub trait Material {
+pub trait Material: Sync + Send {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Ray, Vec3)>;
 }
 

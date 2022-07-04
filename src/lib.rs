@@ -1,4 +1,6 @@
 #![allow(unused)]
+use std::iter::Sum;
+
 // ! mute unused warnings for now
 use glam::Vec3;
 use rayon::prelude::*;
@@ -22,27 +24,27 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
 
     for j in (0..image.height).rev() {
         for i in 0..image.width {
-            let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-            // let pixel_color: Vector3<f32> = (0..image.samples_per_pixel)
-            //     .into_par_iter()
-            //     .map(|_| {
-            //         let mut rng = rand::thread_rng();
-            //         let u = (i as f32 + rng.gen::<f32>()) / (image.width as f32 - 1.0);
-            //         let v = (j as f32 + rng.gen::<f32>()) / (image.height as f32 - 1.0);
-            //         let ray = camera.shoot_ray(u, v);
-            //         ray_color(ray, &world, image.max_depth)
-            //     })
-            //     .sum();
-            for _ in 0..image.samples_per_pixel {
-                let mut rng = rand::thread_rng();
-                let u = (i as f32 + rng.gen::<f32>()) / (image.width as f32 - 1.0);
-                let v = (j as f32 + rng.gen::<f32>()) / (image.height as f32 - 1.0);
-                let ray = camera.shoot_ray(u, v);
-                // TODO move fn to ray.color_pixel(...)
-                pixel_color += ray_color(ray, &world, image.max_depth);
-            }
+            let pixel_color: Color = (0..image.samples_per_pixel)
+                .into_par_iter()
+                .map(|_| {
+                    let mut rng = rand::thread_rng();
+                    let u = (i as f32 + rng.gen::<f32>()) / (image.width as f32 - 1.0);
+                    let v = (j as f32 + rng.gen::<f32>()) / (image.height as f32 - 1.0);
+                    let ray = camera.shoot_ray(u, v);
+                    ray_color(ray, &world, image.max_depth)
+                })
+                .sum();
+            // let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
+            // for _ in 0..image.samples_per_pixel {
+            //     let mut rng = rand::thread_rng();
+            //     let u = (i as f32 + rng.gen::<f32>()) / (image.width as f32 - 1.0);
+            //     let v = (j as f32 + rng.gen::<f32>()) / (image.height as f32 - 1.0);
+            //     let ray = camera.shoot_ray(u, v);
+            //     // TODO move fn to ray.color_pixel(...)
+            //     pixel_color += ray_color(ray, &world, image.max_depth);
+            // }
 
-            let pixel_color = antialiasing(pixel_color, image.samples_per_pixel);
+            let pixel_color = antialiasing(pixel_color.0, image.samples_per_pixel);
             image.pixels.extend(pixel_color);
         }
     }
@@ -146,4 +148,30 @@ fn refract(uv: Vec3, n: Vec3, eta_over_etaprime: f32) -> Vec3 {
     let r_out_perp = eta_over_etaprime * (uv + cos_theta * n);
     let r_out_parallel = -f32::sqrt(f32::abs(1.0 - r_out_perp.length_squared())) * n;
     return r_out_perp + r_out_parallel;
+}
+
+// using the "newtype" pattern to implement a trait on an external type
+// https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types
+struct Color(Vec3);
+
+impl Color {
+    pub fn new(v: Vec3) -> Self {
+        Self(v)
+    }
+}
+
+impl Sum for Color {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(Color::new(Vec3::new(0., 0., 0.)), |a, b| {
+            Self(Vec3::new(a.0.x + b.0.x, a.0.y + b.0.y, a.0.z + b.0.z))
+        })
+    }
+}
+
+impl Sum<Vec3> for Color {
+    fn sum<I: Iterator<Item = Vec3>>(iter: I) -> Self {
+        iter.fold(Color::new(Vec3::new(0., 0., 0.)), |a, b| {
+            Self(Vec3::new(a.0.x + b.x, a.0.y + b.y, a.0.z + b.z))
+        })
+    }
 }

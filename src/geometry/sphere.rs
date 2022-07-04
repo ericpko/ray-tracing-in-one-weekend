@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::Arc};
 
 use glam::Vec3;
 
@@ -12,11 +12,11 @@ use super::{
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Rc<dyn Material>) -> Self {
+    pub fn new(center: Vec3, radius: f32, material: Arc<dyn Material>) -> Self {
         Self {
             center,
             radius,
@@ -55,7 +55,7 @@ impl Hittable for Sphere {
         } else {
             -outward_normal
         };
-        let rec = HitRecord::new(point, normal, root, front_face, &self.material);
+        let rec = HitRecord::new(point, normal, root, front_face, Arc::clone(&self.material));
 
         return Some(rec);
     }
