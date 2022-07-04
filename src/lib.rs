@@ -1,5 +1,5 @@
 #![allow(unused)]
-use std::iter::Sum;
+use std::{iter::Sum, sync::Arc};
 
 // ! mute unused warnings for now
 use glam::Vec3;
@@ -22,7 +22,8 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
     pretty_env_logger::init();
     log::info!("rendering image...");
 
-    for j in (0..image.height).rev() {
+    let mut pixels_arc = Arc::clone(&image.pixels);
+    (0..image.height).into_par_iter().rev().for_each(|j| {
         for i in 0..image.width {
             let pixel_color: Color = (0..image.samples_per_pixel)
                 .into_par_iter()
@@ -45,9 +46,15 @@ pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::
             // }
 
             let pixel_color = antialiasing(pixel_color.0, image.samples_per_pixel);
-            image.pixels.extend(pixel_color);
+            // image.pixels.extend(pixel_color);
+            // image.color_pixel(i, j, &pixel_color);
+            if let Ok(mut pixels_lock) = pixels_arc.lock() {
+                pixels_lock[3 * (j * image.width + i) + 0] = pixel_color[0];
+                pixels_lock[3 * (j * image.width + i) + 1] = pixel_color[1];
+                pixels_lock[3 * (j * image.width + i) + 2] = pixel_color[2];
+            }
         }
-    }
+    });
     image.write_ppm()?;
 
     Ok(())

@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use glam::Vec3;
 use rand::Rng;
@@ -15,9 +15,9 @@ use ray_tracing_in_one_weekend::{
 pub fn main() -> anyhow::Result<()> {
     // set up the image dimensions in pixels
     let aspect_ratio: f32 = 3.0 / 2.0;
-    let image_width: usize = 1200;
-    let samples_per_pixel = 100; // TODO fix
-    let max_depth = 20; // TODO fix
+    let image_width: usize = 256;
+    let samples_per_pixel = 50; // TODO fix
+    let max_depth = 10; // TODO fix
     let image = Image::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
 
     // set up a camera
