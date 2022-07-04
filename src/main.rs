@@ -15,9 +15,9 @@ use ray_tracing_in_one_weekend::{
 pub fn main() -> anyhow::Result<()> {
     // set up the image dimensions in pixels
     let aspect_ratio: f32 = 3.0 / 2.0;
-    let image_width: usize = 1200;
-    let samples_per_pixel = 100; // TODO fix
-    let max_depth = 20; // TODO fix
+    let image_width: usize = 800;
+    let samples_per_pixel = 200;
+    let max_depth = 50;
     let image = Image::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
 
     // set up a camera
@@ -47,7 +47,7 @@ fn generate_random_scene() -> HittableList {
     world.add(Box::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Rc::clone(&mat_ground),
+        mat_ground,
     )));
 
     let mut rng = rand::thread_rng();

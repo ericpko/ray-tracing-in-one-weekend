@@ -4,7 +4,7 @@ use glam::Vec3;
 
 use crate::ray::Ray;
 
-use super::material::{self, Material};
+use super::material::Material;
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
