@@ -1,4 +1,8 @@
-use std::sync::{Arc, Mutex};
+use indicatif::ParallelProgressIterator;
+use rand::Rng;
+use rayon::prelude::*;
+
+use crate::{antialiasing, camera::Camera, geometry::hittable::HittableList, Color};
 
 pub struct Image {
     pub aspect_ratio: f32,
@@ -9,14 +13,14 @@ pub struct Image {
     pub samples_per_pixel: u32,
     pub max_depth: i32, // ray reflection bounce limit
     // flattened 1D image array of bytes
-    pub pixels: Arc<Mutex<Vec<u8>>>,
+    pub pixels: Vec<u8>,
 }
 
 impl Image {
     pub fn new(aspect_ratio: f32, width: usize, samples_per_pixel: u32, max_depth: i32) -> Self {
         let height = (width as f32 / aspect_ratio) as usize;
         // let pixels = Vec::with_capacity(3 * width * height);
-        let pixels = Arc::new(Mutex::new(vec![0u8; 3 * width * height]));
+        let pixels = Vec::new();
         Self {
             aspect_ratio,
             width,
@@ -27,29 +31,44 @@ impl Image {
         }
     }
 
-    // pub fn color_pixel(&mut self, i: usize, j: usize, rgb: &[u8]) {
-    //     // let rgb_image = self.pixels.lock().unwrap();
-    //     // rgb_image[3 * (j * self.width + i) + 0] = rgb[0];
-    //     // rgb_image[3 * (j * self.width + i) + 1] = rgb[1];
-    //     // rgb_image[3 * (j * self.width + i) + 2] = rgb[2];
-    //     let mut pixels = Arc::clone(&self.pixels);
-    //     if let Ok(test) = pixels.lock() {
-    //         test[3 * (j * self.width + i) + 0] = rgb[0];
-    //         test[3 * (j * self.width + i) + 1] = rgb[1];
-    //         test[3 * (j * self.width + i) + 2] = rgb[2];
-    //     }
-    // }
+    pub fn render(&mut self, camera: Camera, world: HittableList) -> anyhow::Result<()> {
+        println!("rendering image...");
+
+        self.pixels = (0..self.height)
+            .into_par_iter()
+            .rev()
+            .progress()
+            .flat_map(|j| {
+                (0..self.width)
+                    .flat_map(|i| {
+                        let pixel_color: Color = (0..self.samples_per_pixel)
+                            .into_par_iter()
+                            .map(|_| {
+                                let mut rng = rand::thread_rng();
+                                let u = (i as f32 + rng.gen::<f32>()) / (self.width as f32 - 1.0);
+                                let v = (j as f32 + rng.gen::<f32>()) / (self.height as f32 - 1.0);
+                                let ray = camera.shoot_ray(u, v);
+                                ray.color(&world, self.max_depth)
+                            })
+                            .sum();
+
+                        antialiasing(pixel_color.0, self.samples_per_pixel)
+                    })
+                    .collect::<Vec<u8>>()
+            })
+            .collect::<Vec<u8>>();
+
+        self.write_ppm()?;
+
+        Ok(())
+    }
 
     pub fn write_ppm(&self) -> std::io::Result<()> {
         let width = self.width;
         let height = self.height;
         let mut image_vec = format!("P6\n{width} {height}\n255\n").as_bytes().to_owned();
 
-        // let pixels = self.pixels.lock().unwrap();
-        if let Ok(pixels) = self.pixels.lock() {
-            image_vec.extend(pixels.iter());
-        }
-        // image_vec.extend(pixels);
+        image_vec.extend(&self.pixels);
         std::fs::write("image.ppm", image_vec)?;
         Ok(())
     }

@@ -1,86 +1,17 @@
-#![allow(unused)]
-use std::{iter::Sum, sync::Arc};
+// #![allow(unused)]
+use std::iter::Sum;
 
-// ! mute unused warnings for now
 use glam::Vec3;
-use rayon::prelude::*;
 
 mod ray;
 use rand::Rng;
-use ray::Ray;
 pub mod camera;
-use camera::Camera;
-pub mod image;
-use image::Image;
 pub mod geometry;
-use geometry::{
-    hittable::{HitRecord, Hittable, HittableList},
-    sphere,
-};
-
-pub fn render(mut image: Image, camera: Camera, world: HittableList) -> anyhow::Result<()> {
-    pretty_env_logger::init();
-    log::info!("rendering image...");
-
-    let mut pixels_arc = Arc::clone(&image.pixels);
-    (0..image.height).into_par_iter().rev().for_each(|j| {
-        for i in 0..image.width {
-            let pixel_color: Color = (0..image.samples_per_pixel)
-                .into_par_iter()
-                .map(|_| {
-                    let mut rng = rand::thread_rng();
-                    let u = (i as f32 + rng.gen::<f32>()) / (image.width as f32 - 1.0);
-                    let v = (j as f32 + rng.gen::<f32>()) / (image.height as f32 - 1.0);
-                    let ray = camera.shoot_ray(u, v);
-                    ray_color(ray, &world, image.max_depth)
-                })
-                .sum();
-            // let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-            // for _ in 0..image.samples_per_pixel {
-            //     let mut rng = rand::thread_rng();
-            //     let u = (i as f32 + rng.gen::<f32>()) / (image.width as f32 - 1.0);
-            //     let v = (j as f32 + rng.gen::<f32>()) / (image.height as f32 - 1.0);
-            //     let ray = camera.shoot_ray(u, v);
-            //     // TODO move fn to ray.color_pixel(...)
-            //     pixel_color += ray_color(ray, &world, image.max_depth);
-            // }
-
-            let pixel_color = antialiasing(pixel_color.0, image.samples_per_pixel);
-            // image.pixels.extend(pixel_color);
-            // image.color_pixel(i, j, &pixel_color);
-            if let Ok(mut pixels_lock) = pixels_arc.lock() {
-                pixels_lock[3 * (j * image.width + i) + 0] = pixel_color[0];
-                pixels_lock[3 * (j * image.width + i) + 1] = pixel_color[1];
-                pixels_lock[3 * (j * image.width + i) + 2] = pixel_color[2];
-            }
-        }
-    });
-    image.write_ppm()?;
-
-    Ok(())
-}
-
-fn ray_color(ray: Ray, world: &HittableList, depth: i32) -> Vec3 {
-    let mut color = Vec3::new(0., 0., 0.);
-
-    // if we've exceeded the ray bounce limit, no more light is gathered
-    if depth <= 0 { // color is already set to 0, 0, 0
-    } else if let Some(hit_rec) = world.hit(&ray, 0.001, f32::MAX) {
-        if let Some((scattered, attenuation)) = hit_rec.material.scatter(&ray, &hit_rec) {
-            color = attenuation * ray_color(scattered, world, depth - 1);
-        }
-    } else {
-        let unit_dir = ray.dir.normalize();
-        let t = 0.5 * (unit_dir.y + 1.0);
-        color = (1. - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0);
-    }
-
-    return color;
-}
+pub mod image;
 
 fn antialiasing(mut color: Vec3, samples_per_pixel: u32) -> [u8; 3] {
     // Divide the color by the number of samples and gamma-correct for gamma = 2.0
-    color /= (samples_per_pixel as f32);
+    color /= samples_per_pixel as f32;
     color.x = color.x.sqrt();
     color.y = color.y.sqrt();
     color.z = color.z.sqrt();
@@ -105,7 +36,7 @@ fn clamp(x: f32, min: f32, max: f32) -> f32 {
     return x;
 }
 
-fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+fn _random_in_hemisphere(normal: Vec3) -> Vec3 {
     let in_unit_sphere = random_in_unit_sphere();
     if in_unit_sphere.dot(normal) > 0.0 {
         // in the same hemisphere as the normal

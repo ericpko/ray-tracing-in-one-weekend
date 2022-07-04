@@ -15,16 +15,16 @@ use ray_tracing_in_one_weekend::{
 pub fn main() -> anyhow::Result<()> {
     // set up the image dimensions in pixels
     let aspect_ratio: f32 = 3.0 / 2.0;
-    let image_width: usize = 256;
-    let samples_per_pixel = 50; // TODO fix
-    let max_depth = 10; // TODO fix
-    let image = Image::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
+    let image_width: usize = 1200;
+    let samples_per_pixel = 500;
+    let max_depth = 50;
+    let mut image = Image::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
 
     // set up a camera
     let look_from = Vec3::new(13., 2., 3.);
     let look_at = Vec3::new(0., 0., 0.);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
+    let aperture = 0.1; // larger aperture -> more defocus blur
     let camera = Camera::new(
         look_from,
         look_at,
@@ -36,7 +36,8 @@ pub fn main() -> anyhow::Result<()> {
 
     let world = generate_random_scene();
 
-    ray_tracing_in_one_weekend::render(image, camera, world)?;
+    // ray_tracing_in_one_weekend::render(image, camera, world)?;
+    image.render(camera, world)?;
     Ok(())
 }
 
@@ -47,7 +48,7 @@ fn generate_random_scene() -> HittableList {
     world.add(Arc::new(Sphere::new(
         Vec3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Arc::clone(&mat_ground),
+        mat_ground,
     )));
 
     let mut rng = rand::thread_rng();
